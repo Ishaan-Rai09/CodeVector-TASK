@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Products Browser</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Products Browser</h1>
+      <div class="controls">
+        <select id="category">
+          <option value="">All Categories</option>
+        </select>
+        <span id="total"></span>
+      </div>
+    </header>
+
+    <div id="products" class="products-grid"></div>
+
+    <div class="pagination">
+      <button id="prev" disabled>Previous</button>
+      <button id="next" disabled>Next</button>
+    </div>
+
+    <div id="loading" class="loading hidden">Loading...</div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
