@@ -3,30 +3,56 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Products Browser</title>
+  <title>ProductHub - Browse Products</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Products Browser</h1>
-      <div class="controls">
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="logo">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10a4 4 0 01-8 0"/>
+        </svg>
+        <span>ProductHub</span>
+      </div>
+      <div class="nav-stats">
+        <span id="total" class="badge">Loading...</span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div class="toolbar">
+      <div class="filter-group">
+        <label for="category">Category</label>
         <select id="category">
           <option value="">All Categories</option>
         </select>
-        <span id="total"></span>
       </div>
-    </header>
+      <div class="page-info" id="pageInfo">Page 1</div>
+    </div>
 
     <div id="products" class="products-grid"></div>
 
     <div class="pagination">
-      <button id="prev" disabled>Previous</button>
-      <button id="next" disabled>Next</button>
+      <button id="prev" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Previous
+      </button>
+      <button id="next" disabled>
+        Next
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
     </div>
 
-    <div id="loading" class="loading hidden">Loading...</div>
-  </div>
+    <div id="loading" class="loading hidden">
+      <div class="spinner"></div>
+    </div>
+  </main>
 
   <script src="script.js"></script>
 </body>

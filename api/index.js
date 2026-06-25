@@ -1,9 +1,3 @@
-// api/index.js - Vercel serverless function
-// Cursor-based pagination: uses (created_at, id) as cursor instead of OFFSET.
-// Why? OFFSET is slow on large tables and breaks when data changes mid-browse.
-// Cursor approach: WHERE (created_at, id) < ($before_created_at, $before_id)
-// guarantees no duplicates or skipped rows even if products are inserted/deleted.
-
 const { createClient } = require("@supabase/supabase-js");
 
 const supabase = createClient(
@@ -12,33 +6,34 @@ const supabase = createClient(
 );
 
 module.exports = async (req, res) => {
-  // CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method === "OPTIONS") {
+    res.writeHead(200);
+    return res.end();
+  }
 
   try {
-    const { category, cursor, limit = 20 } = req.query;
-    const pageSize = Math.min(Math.max(parseInt(limit) || 20, 1), 100);
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const category = url.searchParams.get("category");
+    const cursor = url.searchParams.get("cursor");
+    const limit = parseInt(url.searchParams.get("limit")) || 20;
+    const pageSize = Math.min(Math.max(limit, 1), 100);
 
     let query = supabase
       .from("products")
       .select("id, name, category, price, created_at")
       .order("created_at", { ascending: false })
       .order("id", { ascending: false })
-      .limit(pageSize + 1); // fetch one extra to detect "hasMore"
+      .limit(pageSize + 1);
 
-    // Filter by category
     if (category) {
       query = query.eq("category", category);
     }
 
-    // Cursor-based pagination: filter rows older than the cursor
     if (cursor) {
       const [cursorDate, cursorId] = cursor.split("|");
-      // Keyset pagination: (created_at, id) < (cursorDate, cursorId)
-      // This works because we order by created_at DESC, id DESC
       query = query.or(
         `created_at.lt.${cursorDate},and(created_at.eq.${cursorDate},id.lt.${cursorId})`
       );
@@ -53,13 +48,16 @@ module.exports = async (req, res) => {
       ? `${products[products.length - 1].created_at}|${products[products.length - 1].id}`
       : null;
 
-    // Get total count (cached by Supabase/PostgreSQL)
     const { count } = await supabase
       .from("products")
       .select("*", { count: "exact", head: true });
 
-    res.json({ products, nextCursor, total: count });
+    const body = JSON.stringify({ products, nextCursor, total: count });
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(body);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    const body = JSON.stringify({ error: err.message });
+    res.writeHead(500, { "Content-Type": "application/json" });
+    res.end(body);
   }
 };

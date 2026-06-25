@@ -1,45 +1,39 @@
-// script.js - Frontend logic for products browser
-
-const API_BASE = "/api";
+const API = "/api";
 const PAGE_SIZE = 20;
-
-let cursorStack = []; // stack of cursors for "Previous" navigation
+let cursorStack = [];
 let currentCursor = null;
 let currentCategory = "";
 let nextCursor = null;
+let pageNumber = 1;
 
-// Fetch products from API
 async function fetchProducts(category, cursor) {
   const params = new URLSearchParams({ limit: PAGE_SIZE });
   if (category) params.set("category", category);
   if (cursor) params.set("cursor", cursor);
-
-  const res = await fetch(`${API_BASE}?${params}`);
+  const res = await fetch(`${API}?${params}`);
   if (!res.ok) throw new Error(`API error: ${res.status}`);
   return res.json();
 }
 
-// Render products to the page
 function renderProducts(products) {
-  const grid = document.getElementById("products");
-  grid.innerHTML = products
-    .map(
-      (p) => `
+  document.getElementById("products").innerHTML = products.map(p => `
     <div class="product-card">
-      <div class="name">${p.name}</div>
-      <div class="category">${p.category}</div>
-      <div class="price">$${Number(p.price).toFixed(2)}</div>
-      <div class="date">Created: ${new Date(p.created_at).toLocaleDateString()}</div>
-    </div>`
-    )
-    .join("");
+      <div class="product-header">
+        <div class="product-name">${p.name}</div>
+        <div class="product-price">$${Number(p.price).toFixed(2)}</div>
+      </div>
+      <div class="product-category">${p.category}</div>
+      <div class="product-meta">
+        <span class="product-id">#${p.id}</span>
+        <span>${new Date(p.created_at).toLocaleDateString()}</span>
+      </div>
+    </div>
+  `).join("");
 }
 
-// Load a page of products
 async function loadPage(cursor = null) {
   const loading = document.getElementById("loading");
   loading.classList.remove("hidden");
-
   try {
     const data = await fetchProducts(currentCategory, cursor);
     renderProducts(data.products);
@@ -47,39 +41,19 @@ async function loadPage(cursor = null) {
     document.getElementById("total").textContent = `${data.total.toLocaleString()} products`;
     document.getElementById("prev").disabled = cursorStack.length === 0;
     document.getElementById("next").disabled = !data.nextCursor;
+    document.getElementById("pageInfo").textContent = `Page ${pageNumber}`;
   } catch (err) {
-    document.getElementById("products").innerHTML = `<p>Error: ${err.message}</p>`;
+    document.getElementById("products").innerHTML = `<p style="text-align:center;color:#ef4444;padding:48px">Error: ${err.message}</p>`;
   } finally {
     loading.classList.add("hidden");
   }
 }
 
-// Load categories into dropdown
-async function loadCategories() {
-  try {
-    const res = await fetch(`${API_BASE}?limit=0`);
-    // Categories are hardcoded from seed - fetch one page to get categories
-    const categories = [
-      "Electronics", "Clothing", "Home & Garden", "Sports", "Books",
-      "Toys", "Automotive", "Health", "Food", "Office"
-    ];
-    const select = document.getElementById("category");
-    categories.forEach((cat) => {
-      const opt = document.createElement("option");
-      opt.value = cat;
-      opt.textContent = cat;
-      select.appendChild(opt);
-    });
-  } catch (err) {
-    console.error("Failed to load categories:", err);
-  }
-}
-
-// Event listeners
-document.getElementById("category").addEventListener("change", (e) => {
+document.getElementById("category").addEventListener("change", e => {
   currentCategory = e.target.value;
   cursorStack = [];
   currentCursor = null;
+  pageNumber = 1;
   loadPage();
 });
 
@@ -87,6 +61,7 @@ document.getElementById("next").addEventListener("click", () => {
   if (nextCursor) {
     cursorStack.push(currentCursor);
     currentCursor = nextCursor;
+    pageNumber++;
     loadPage(currentCursor);
   }
 });
@@ -94,10 +69,22 @@ document.getElementById("next").addEventListener("click", () => {
 document.getElementById("prev").addEventListener("click", () => {
   if (cursorStack.length > 0) {
     currentCursor = cursorStack.pop();
+    pageNumber--;
     loadPage(currentCursor);
   }
 });
 
-// Initial load
-loadCategories();
+// Init
+const categories = [
+  "Electronics", "Clothing", "Home & Garden", "Sports", "Books",
+  "Toys", "Automotive", "Health", "Food", "Office"
+];
+const select = document.getElementById("category");
+categories.forEach(cat => {
+  const opt = document.createElement("option");
+  opt.value = cat;
+  opt.textContent = cat;
+  select.appendChild(opt);
+});
+
 loadPage();

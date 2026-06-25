@@ -5,11 +5,11 @@
   "main": "api/index.js",
   "scripts": {
     "seed": "node seed.js",
-    "dev": "vercel dev",
-    "start": "vercel dev"
+    "dev": "node server.js",
+    "start": "node server.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
-    "dotenv": "^17.4.2"
+    "dotenv": "^16.4.0"
   }
 }
